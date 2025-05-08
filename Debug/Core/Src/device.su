@@ -1,0 +1,6 @@
+../Core/Src/device.c:42:6:Device_Init	32	static
+../Core/Src/device.c:67:6:EPD_Print	32	static
+../Core/Src/device.c:77:6:EPD_PrintTemperature	72	static
+../Core/Src/device.c:85:6:EPD_PrintPressure	72	static
+../Core/Src/device.c:93:6:EPD_PrintHumidity	72	static
+../Core/Src/device.c:101:6:EPD_PrintAltitude	80	static

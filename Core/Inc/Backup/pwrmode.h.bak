@@ -1,0 +1,27 @@
+#ifndef __PWRMODE_H
+#define __PWRMODE_H
+
+#include "stm32l4xx_hal.h"
+#include "stm32l4xx_hal_pwr.h"
+#include "stm32l4xx_hal_pwr_ex.h"
+#include "gpio.h" // For LD2_Pin and USER_Btn_Pin macros
+#include "device.h"
+
+// Power operation modes
+typedef enum {
+    AUTO_MODE = 0,
+    USER_INPUT_MODE
+} PWRMode_t;
+
+// Global power mode variable
+extern PWRMode_t pwrmode;
+
+// Public function prototypes
+void PWRMode_Init(void);
+void PWRMode_HandleWakeup(void);
+void PWRMode_UpdateLED(void);
+void PWRMode_SampleAndDisplay(void);
+void PWRMode_UserModeDisplay(void);
+void PWRMode_EnterShutdown(void);
+
+#endif /* __PWRMODE_H */

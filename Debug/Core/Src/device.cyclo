@@ -1,0 +1,6 @@
+../Core/Src/device.c:42:6:Device_Init	2
+../Core/Src/device.c:67:6:EPD_Print	2
+../Core/Src/device.c:77:6:EPD_PrintTemperature	1
+../Core/Src/device.c:85:6:EPD_PrintPressure	1
+../Core/Src/device.c:93:6:EPD_PrintHumidity	1
+../Core/Src/device.c:101:6:EPD_PrintAltitude	1

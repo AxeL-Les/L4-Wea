@@ -1,0 +1,6 @@
+../Core/Src/pwrmode.c:37:6:PWRMode_Init	8	static
+../Core/Src/pwrmode.c:46:6:PWRMode_HandleWakeup	4	static
+../Core/Src/pwrmode.c:62:6:PWRMode_UpdateLED	8	static
+../Core/Src/pwrmode.c:74:6:PWRMode_SampleAndDisplay	88	static
+../Core/Src/pwrmode.c:133:6:PWRMode_UserModeDisplay	16	static
+../Core/Src/pwrmode.c:143:6:PWRMode_EnterShutdown	8	static

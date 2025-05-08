@@ -1,0 +1,36 @@
+#ifndef __EPD_H__
+#define __EPD_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "main.h"
+#include "spi.h"
+#include "gpio.h"
+#include <stdint.h>
+
+/* --- E-paper display resolution --- */
+#define EPD_WIDTH    250
+#define EPD_HEIGHT   122
+
+/* --- Public Functions --- */
+void epd_load_default_lut(void);
+void epd_init(void);
+void epd_reset(void);
+void epd_wait_until_idle(void);
+void epd_send_command(uint8_t command);
+void epd_send_data(uint8_t data);
+
+void epd_turn_on_display(void);
+
+void epd_clear_white(void);
+void epd_clear_black(void);
+void epd_display_frame(const uint8_t *frame_buffer);
+void epd_sleep(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __EPD_H__ */

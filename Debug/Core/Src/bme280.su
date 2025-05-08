@@ -1,0 +1,9 @@
+../Core/Src/bme280.c:44:6:BME280_Init	48	static
+../Core/Src/bme280.c:70:7:BME280_ReadTemperature	56	static
+../Core/Src/bme280.c:88:7:BME280_ReadPressure	360	static
+../Core/Src/bme280.c:114:7:BME280_ReadHumidity	48	static
+../Core/Src/bme280.c:139:16:BME280_Read8	40	static
+../Core/Src/bme280.c:146:17:BME280_Read16_LE	40	static
+../Core/Src/bme280.c:153:16:BME280_ReadS16_LE	16	static
+../Core/Src/bme280.c:158:17:BME280_Read24	40	static
+../Core/Src/bme280.c:165:13:BME280_ReadCoefficients	40	static

@@ -1,0 +1,224 @@
+#include "epd.h"
+#include "spi.h"
+#include "gpio.h"
+#include "usart.h"
+#include <string.h>  // for memset()
+#include <stdio.h>
+
+#define EPD_WIDTH   250
+#define EPD_HEIGHT  122
+
+const uint8_t EPD_LUT_DEFAULT[] = {
+    0x32, 0x02, 0x02, 0x00, 0x01, 0x11, 0x01, 0x22, 0x01, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x15, 0x41, 0xA8, 0x32, 0x30, 0x0A, 0x05, 0x00, 0x00, 0x00
+};
+
+//const uint8_t EPD_LUT_DEFAULT[] = {
+//    0xA0, 0x90, 0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//    0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+//};
+
+void epd_load_default_lut(void)
+{
+    epd_send_command(0x32); // Write LUT
+
+    for (uint8_t i = 0; i < sizeof(EPD_LUT_DEFAULT); i++) {
+        epd_send_data(EPD_LUT_DEFAULT[i]);
+    }
+
+    epd_wait_until_idle();
+}
+
+
+void epd_reset(void)
+{
+    HAL_GPIO_WritePin(EPD_RST_GPIO_Port, EPD_RST_Pin, GPIO_PIN_RESET);
+    HAL_Delay(20);
+    HAL_GPIO_WritePin(EPD_RST_GPIO_Port, EPD_RST_Pin, GPIO_PIN_SET);
+    HAL_Delay(20);
+}
+
+void epd_wait_until_idle(void)
+{
+    printf("Waiting for BUSY to go LOW...\r\n");
+    while (HAL_GPIO_ReadPin(EPD_BUSY_GPIO_Port, EPD_BUSY_Pin) == GPIO_PIN_SET)
+    {
+        HAL_Delay(10);
+    }
+    printf("BUSY went LOW!\r\n");
+    HAL_Delay(10);
+}
+
+void epd_send_command(uint8_t command)
+{
+    HAL_GPIO_WritePin(EPD_DC_GPIO_Port, EPD_DC_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(EPD_CS_GPIO_Port, EPD_CS_Pin, GPIO_PIN_RESET);
+    HAL_SPI_Transmit(&hspi2, &command, 1, HAL_MAX_DELAY);
+    HAL_GPIO_WritePin(EPD_CS_GPIO_Port, EPD_CS_Pin, GPIO_PIN_SET);
+}
+
+void epd_send_data(uint8_t data)
+{
+    HAL_GPIO_WritePin(EPD_DC_GPIO_Port, EPD_DC_Pin, GPIO_PIN_SET); // DC high
+    HAL_GPIO_WritePin(EPD_CS_GPIO_Port, EPD_CS_Pin, GPIO_PIN_RESET); // CS low
+
+    for (volatile int d=0; d<50; d++); // ⚡ Tiny breathing gap
+
+    HAL_SPI_Transmit(&hspi2, &data, 1, HAL_MAX_DELAY);
+
+    HAL_GPIO_WritePin(EPD_CS_GPIO_Port, EPD_CS_Pin, GPIO_PIN_SET); // CS high
+
+    for (volatile int d=0; d<50; d++); // ⚡ Tiny breathing gap after CS high
+}
+
+void epd_init(void)
+{
+    epd_reset();
+    epd_wait_until_idle();
+
+    epd_send_command(0x12); // SWRESET
+    epd_wait_until_idle();
+
+    epd_send_command(0x01); // Driver output control
+    epd_send_data(0xF9);
+    epd_send_data(0x00);
+    epd_send_data(0x00);
+
+    epd_send_command(0x11); // Data entry mode
+    epd_send_data(0x03);
+
+    epd_send_command(0x44); // RAM X address start/end
+    epd_send_data(0x00);
+    epd_send_data(0x0F);
+
+    epd_send_command(0x45); // RAM Y address start/end
+    epd_send_data(0x00);
+    epd_send_data(0x00);
+    epd_send_data(0xF9);
+    epd_send_data(0x00);
+
+    epd_send_command(0x4E); // Set RAM X address counter
+    epd_send_data(0x00);
+
+    epd_send_command(0x4F); // Set RAM Y address counter
+    epd_send_data(0x00);
+    epd_send_data(0x00);
+
+    epd_send_command(0x3C); // Border waveform
+    epd_send_data(0x05);
+
+    epd_send_command(0x21); // Display update control
+    epd_send_data(0x00);
+    epd_send_data(0x80);
+
+    epd_send_command(0x18); // Temperature sensor
+    epd_send_data(0x80);
+
+    epd_send_command(0x22); // Display Update Control
+    epd_send_data(0xC7);    // Load LUT and do initial waveform
+    epd_send_command(0x20); // Activate Display Update
+    epd_load_default_lut();
+    epd_wait_until_idle();
+}
+
+
+void epd_clear_white(void)
+{
+    uint32_t width = (EPD_WIDTH % 8 == 0) ? (EPD_WIDTH / 8) : (EPD_WIDTH / 8 + 1);
+    uint32_t height = EPD_HEIGHT;
+
+    epd_send_command(0x24); // Write RAM
+
+    for (uint32_t j = 0; j < height; j++) {
+        for (uint32_t i = 0; i < width; i++) {
+            epd_send_data(0xFF); // White = 1
+        }
+    }
+
+    // Refresh display
+    epd_send_command(0x22);
+    epd_send_data(0xF7); // Display Update Control
+    epd_send_command(0x20); // Activate Display Update
+    epd_wait_until_idle();
+}
+
+void epd_clear_black(void)
+{
+    uint32_t width = (EPD_WIDTH % 8 == 0) ? (EPD_WIDTH / 8) : (EPD_WIDTH / 8 + 1);
+    uint32_t height = EPD_HEIGHT;
+
+    epd_send_command(0x24); // Write RAM
+
+    for (uint32_t j = 0; j < height; j++) {
+        for (uint32_t i = 0; i < width; i++) {
+            epd_send_data(0x00); // Black = 0
+        }
+    }
+
+    // Refresh display
+    epd_send_command(0x22);
+    epd_send_data(0xF7); // Display Update Control
+    epd_send_command(0x20); // Activate Display Update
+    epd_wait_until_idle();
+}
+
+void epd_display_frame(const uint8_t *frame_buffer)
+{
+    uint32_t width = (EPD_WIDTH % 8 == 0) ? (EPD_WIDTH / 8) : (EPD_WIDTH / 8 + 1);
+    uint32_t height = EPD_HEIGHT;
+
+    /* --- 1. Set Window Start/End Positions --- */
+    epd_send_command(0x44); // SET_RAM_X_ADDRESS_START_END_POSITION
+    epd_send_data(0x00);    // X start
+    epd_send_data(0x0F);    // X end (15 = 0x0F = 16*8=128 pixels)
+
+    epd_send_command(0x45); // SET_RAM_Y_ADDRESS_START_END_POSITION
+    epd_send_data(0x00);    // Y start LSB
+    epd_send_data(0x00);    // Y start MSB
+    epd_send_data(0xF9);    // Y end LSB (250)
+    epd_send_data(0x00);    // Y end MSB
+
+    /* --- 2. Set Cursor (RAM Address Counters) --- */
+    epd_send_command(0x4E); // SET_RAM_X_ADDRESS_COUNTER
+    epd_send_data(0x00);
+
+    epd_send_command(0x4F); // SET_RAM_Y_ADDRESS_COUNTER
+    epd_send_data(0x00);
+    epd_send_data(0x00);
+
+    /* --- 3. Start Data Transmission --- */
+    epd_send_command(0x24); // Write RAM command
+
+    for (uint32_t j = 0; j < height; j++) {
+        for (uint32_t i = 0; i < width; i++) {
+            epd_send_data(frame_buffer[i + j * width]);
+        }
+    }
+
+    printf("Finished sending frame buffer!\r\n");
+
+    /* --- 4. Refresh the Display --- */
+    epd_send_command(0x22); // Display Update Control
+    epd_send_data(0xF7);    // Load LUT + Display Refresh
+    epd_send_command(0x20); // Activate Display Update
+    epd_wait_until_idle();  // Wait until update finishes
+}
+
+void epd_turn_on_display(void)
+{
+    epd_send_command(0x22);  // Display Update Control
+    epd_send_data(0xF7);     // Full display refresh
+    epd_send_command(0x20);  // Activate display update
+    epd_wait_until_idle();   // Wait until refresh is complete
+}
+
+
+
+void epd_sleep(void)
+{
+    epd_send_command(0x10); // Enter deep sleep
+    epd_send_data(0x01);
+    HAL_Delay(100);
+}

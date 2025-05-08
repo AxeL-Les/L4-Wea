@@ -1,0 +1,14 @@
+/*
+ * Interupt.h
+ *
+ *  Created on: Apr 25, 2025
+ *      Author: akshi
+ */
+
+#ifndef INC_INTERUPT_H_
+#define INC_INTERUPT_H_
+
+void PC13_EXTI_Init(void);
+void LED_Init(void);
+
+#endif /* INC_INTERUPT_H_ */
