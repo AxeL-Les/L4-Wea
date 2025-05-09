@@ -73,29 +73,29 @@ void PWRMode_UpdateLED(void)
 
 void PWRMode_SampleAndDisplay(void)
 {
-  /* USER CODE BEGIN AUTO_MODE_INIT */
-  extern bme280_t bme;                       /* sensor handle from device.c   */
-  volatile uint32_t *bkp = (uint32_t *)0x40024000; /* BKPSRAM base            */
-  const float seaLevel = 1013.25f;                /* hPa                       */
+  // USER CODE BEGIN AUTO_MODE_INIT 
+  extern bme280_t bme;                        // sensor handle from device.c   
+  volatile uint32_t *bkp = (uint32_t *)0x40024000; // BKPSRAM base            
+  const float seaLevel = 1013.25f;                // hPa                      
 
   uint32_t sumPa = 0;
 
-  /* USER CODE END AUTO_MODE_INIT */
 
-  for (uint8_t s = 0; s < 10; ++s)           /* 10 samples → 1 min           */
+
+  for (uint8_t s = 0; s < 10; ++s)           // 10 samples → 1 min       
   {
-    /* USER CODE BEGIN AUTO_MODE_LOOP */
+    
 
-    /* 1. Read sensor */
-    float temp = BME280_ReadTemperature(&bme);     /* °C  */
-    float press = BME280_ReadPressure(&bme);       /* hPa */
-    float hum   = BME280_ReadHumidity(&bme);       /* %   */
+    // 1. Read sensor 
+    float temp = BME280_ReadTemperature(&bme);     // °C 
+    float press = BME280_ReadPressure(&bme);       // hPa 
+    float hum   = BME280_ReadHumidity(&bme);       // %   
     float alt   = 44330.0f * (1.0f - powf(press / seaLevel, 0.1903f));
 
-    sumPa += (uint32_t)(press * 100);              /* accumulate in Pa         */
-    bkp[s] = (uint32_t)(press * 100);              /* store raw in BKPSRAM     */
+    sumPa += (uint32_t)(press * 100);              // accumulate in Pa         
+    bkp[s] = (uint32_t)(press * 100);              // store raw in BKPSRAM     
 
-    /* 2. Update display live (1 FPS) */
+    // 2. Update display live (1 FPS) 
     Paint_Clear(WHITE);
     char buf[32];
 
@@ -113,21 +113,18 @@ void PWRMode_SampleAndDisplay(void)
 
     EPD_2in13_V4_Display_Fast(BlackImage);
 
-    /* wait 6 s before next sample */
+    // wait 6 s before next sample 
     HAL_Delay(6000);
 
-    /* USER CODE END AUTO_MODE_LOOP */
+    
   }
 
-  /* USER CODE BEGIN AUTO_MODE_AVG */
-
-  /* Hourly average pressure (Pa) → store in BKPSRAM word 16 .. etc. */
+  //Hourly average pressure (Pa) → store in BKPSRAM word 16 .. etc. 
   uint32_t avgPa = sumPa / 10u;
-  bkp[16] = avgPa;          /* example: store average after raw block */
+  bkp[16] = avgPa;          // example: store average after raw block
 
-  /* Optional: flash write or other hourly tasks here */
+ 
 
-  /* USER CODE END AUTO_MODE_AVG */
 }
 
 void PWRMode_UserModeDisplay(void)

@@ -43,33 +43,33 @@
 #include <math.h>
 #include <stdlib.h>
 
-/* --- Global Variables --- */
+// --- Global Variables ---
 extern UBYTE *BlackImage;
 extern bme280_t bme;
 #define BME280_ADDRESS  (0x76 << 1)
-/* --- Font Color Modes --- */
+// --- Font Color Modes --- 
 typedef enum {
     FONT_BLACK_ON_WHITE,
     FONT_WHITE_ON_BLACK
 } FontColorMode_t;
 
-/* --- Functions --- */
+ // --- Functions --- 
 
-/**
- * @brief Initialize EPD and BME280
- * @param rotation Rotation (0, 90, 180, 270 degrees)
- * @param background_color WHITE or BLACK
- */
+
+ //brief Initialize EPD and BME280
+// param rotation Rotation (0, 90, 180, 270 degrees)
+ //param background_color WHITE or BLACK
+ 
 void Device_Init(UBYTE rotation, UBYTE background_color);
 
-/**
- * @brief General text print function.
- */
+
+// General text print function.
+ 
 void EPD_Print(int x, int y, const char* text,sFONT* font, FontColorMode_t mode);
 
-/**
- * @brief Specialized functions to print sensor data.
- */
+
+ // Specialized functions to print sensor data.
+ 
 void EPD_PrintTemperature(bme280_t *bme, int x, int y, FontColorMode_t mode);
 void EPD_PrintPressure(bme280_t *bme, int x, int y, FontColorMode_t mode);
 void EPD_PrintHumidity(bme280_t *bme, int x, int y, FontColorMode_t mode);
